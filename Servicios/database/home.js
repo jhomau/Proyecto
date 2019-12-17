@@ -1,7 +1,29 @@
 const mongoose = require('./connect');
 var HOMESCHEMA = {
-    satus               : String,
-    oProperty           : Array,  // PROPIEDAD
+    id          : Number,
+    tipocasa    : String,
+    estado      : String,
+    ubicacion   : String,
+    zona        : String,
+    direccion   : String,
+    precio      : String,
+    servicios   : Array,
+    descripcion : String,
+    amurallado  : String,
+    anioconstruccion : Number,
+    numDormitorios : Number,
+    numBanios   : Number,
+    elevador    : String,
+    piscina     : String,
+    amoblado    : String,
+    fecpublicacion : Date,
+    superficie  : String,
+    lat         : String,
+    lng         : String,
+    image       : [{url:String}]
+};
+/*satus               : String,
+    oPoperty           : Array,  // PROPIEDAD
     ID                  : Number,
     pk                  : Number,
     codigo              : String,
@@ -67,7 +89,6 @@ var HOMESCHEMA = {
     email               : String,
     ciudad              : String,
     foto                : Array, // IMAGEN DEL CONTACTO
-    phoneFirstDigits    : String
-};
+    phoneFirstDigits    : String*/
 const HOME = mongoose.model("home",HOMESCHEMA);
 module.exports = HOME;

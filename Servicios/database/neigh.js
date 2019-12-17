@@ -1,12 +1,13 @@
 const mongoose = require('./connect');
 var NEIGHSCHEMA = {
-    id              : String,
+    id              : Number,
     departamento    : String,
     nombre          : String,
     zoom            : Number,
     lat             : Number,
     lng             : Number,
-    coordenadas     : Array
+    coordenadas     : [{lat:String,
+                        lng:String}]
 };
 const NEIGH = mongoose.model("neighborhood",NEIGHSCHEMA);
 module.exports = NEIGH;
