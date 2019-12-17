@@ -204,15 +204,7 @@ router.get("/home",verytoken, (req, res) => {
 //POST HOME
 router.post('/home',verytoken, async(req, res) => {   
     var params = req.body;
-    imgSet.push({'url' : 'IMG-1576376815246.jpg'});
-    var imgSet=[];
-    if(!empty(req.files)){
-      req.files.forEach(foto=>{
-        imgSet.push({'url':foto['filename']});
-      });
-    }
     params["fecpublicacion"] = new Date();
-    params["image"] = imgSet;
     var homes = new HOME(params);
     var resultH = await homes.save();
     res.status(200).json(resultH);  
