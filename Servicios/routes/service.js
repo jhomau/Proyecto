@@ -1,8 +1,9 @@
 const express = require('express');
 var USER = require('../database/user');
 var HOME = require('../database/home');
-var NEIGH = require('../database/neigh')
+var NEIGH = require('../database/neigh');
 var router = express.Router();
+var crypto = require('crypto');
 //INICIO
 router.get('/', (req,res,next)=>{
     res.status(200).json({
@@ -14,8 +15,17 @@ router.post('/user', async(req, res) => { 
     var params = req.body;
     params["registerdate"] = new Date();
     params["rol"] = ["user"];
+    if (params.password ==null){
+        res.status(300).json({
+            "msn" : "No tiene el password"
+        });
+        return;
+    }
+    //HASH DE PASSWORD
+    params["password"] = crypto.createHash("md5").update(params.password).digest("hex");
     var users = new USER(params);
     var result = await users.save();
+    
     res.status(200).json(result);  
 }); 
 //GET USUARIO
