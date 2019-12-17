@@ -4,6 +4,80 @@ var HOME = require('../database/home');
 var NEIGH = require('../database/neigh');
 var router = express.Router();
 var crypto = require('crypto');
+var jwt = require ('jsonwebtoken');
+const keycyper = "prueba123";
+
+function verytoken (req,res,next) {
+    //Recibimos el token
+    const header = req.headers["authorization"];
+    if(header == null){
+        res.status(300).json({
+            "msn" : "no tienen el Permiso"
+        });
+        return;
+    }
+    req.token = header;
+    jwt.verify(req.token, keycyper, (err,authData)=>{
+        if (err) {
+            res.status(403).json({
+                "msn" : "TOKEN INCORRECTO"
+            });
+            return;
+        }
+        var email = authData.usuario;
+        USER.find({email:email}).exec((err,docs)=>{
+            if (err){
+                res.status(300).json({
+                    "msn" : "Error en la Base de Datos"
+                });
+                return;
+            };
+            if (docs[0].toJSON().rol[0]== "user" || docs[0].toJSON().rol[0]== "admin"){
+                next();
+            }
+            else {
+                res.status(300).json({
+                    "msn" : "Usted no cuenta con el rol para este servcio"
+                });
+                return;
+            }
+        });
+        //res.status(200).json(authData);
+    });
+}
+//LOGIN
+router.post('/login', async(req,res,next) =>{
+    var params = req.body;
+    //var passwordcypher = crypto.createHash("md5").update(params.password).digest("hex");
+    USER.find({email:params.email,password:params.password}).exec((err,docs)=>{
+        if (err){
+            res.status(300).json({
+                "msn" : "Problemas al adquirir token"
+            });
+            return;
+        }
+        if (docs.length == 0){
+            console.log(docs,params);
+            res.status(300).json({
+                "msn" : "Usuario y Password incorrectos"
+            });
+            return;
+        } else{
+            //creacion del token
+        jwt.sign({usuario: params.email, password: params.password},keycyper,(err,token)=>{
+            if (err){
+                res.status(300).json({                   
+                         "msn" : "Error con JSONWEBTOKEN"
+                });
+                    return;
+                }
+                res.status(200).json({
+                    "token" : token
+                });
+            });
+        }
+    });
+});
 //INICIO
 router.get('/', (req,res,next)=>{
     res.status(200).json({
@@ -11,7 +85,7 @@ router.get('/', (req,res,next)=>{
     });
 });
 //POST USUARIO
-router.post('/user', async(req, res) => {   
+router.post('/user',verytoken, async(req, res) => {   
     var params = req.body;
     params["registerdate"] = new Date();
     params["rol"] = ["user"];
@@ -22,14 +96,13 @@ router.post('/user', async(req, res) => { 
         return;
     }
     //HASH DE PASSWORD
-    params["password"] = crypto.createHash("md5").update(params.password).digest("hex");
+    //params["password"] = crypto.createHash("md5").update(params.password).digest("hex");
     var users = new USER(params);
     var result = await users.save();
-    
     res.status(200).json(result);  
 }); 
 //GET USUARIO
-router.get("/user", (req, res) => {
+router.get("/user",verytoken, (req, res) => {
     var params = req.query;
     var limit = 3;
     var filter = {};
@@ -74,7 +147,7 @@ router.get("/user", (req, res) => {
     })
 });
 // PATCH USUARIO
-router.patch("/user", (req, res) => {
+router.patch("/user",verytoken, (req, res) => {
     if (req.query.id == null) {  
         res.status(300).json({    
             msn: "Error no existe id"  
@@ -88,7 +161,7 @@ router.patch("/user", (req, res) => {
     })
 }); 
 //DELETE USUARIO
-router.delete("/user", async(req, res) => {
+router.delete("/user",verytoken, async(req, res) => {
     if (req.query.id == null) {  
         res.status(300).json({    
             msn: "Error no existe id"  
@@ -100,7 +173,7 @@ router.delete("/user", async(req, res) => {
 });
 
 //GET HOME MOSTRAR TODO
-router.get("/home", (req, res) => {
+router.get("/home",verytoken, (req, res) => {
     var params = req.query;
     var limit;
     var filter = {};
@@ -129,14 +202,14 @@ router.get("/home", (req, res) => {
     })
 });
 //POST HOME
-router.post('/home', async(req, res) => {   
+router.post('/home',verytoken, async(req, res) => {   
     var params = req.body;
     var homes = new HOME(params);
     var resultH = await homes.save();
     res.status(200).json(resultH);  
 }); 
 //GET NEIGH MOSTRAR TODO
-router.get("/neigh", (req, res) => {
+router.get("/neigh",verytoken, (req, res) => {
     var params = req.query;
     var limit;
     var order = 1;
@@ -166,7 +239,7 @@ router.get("/neigh", (req, res) => {
     })
 });
 //POST NEIGH
-router.post('/neigh', async(req, res) => {   
+router.post('/neigh',verytoken, async(req, res) => {   
     var params = req.body;
     var neighs = new NEIGH(params);
     var resultN = await neighs.save();
@@ -175,7 +248,7 @@ router.post('/neigh', async(req, res) => { 
 
 /*GET MOSTRAR HOME POR OPROPERTY(ID,idZona,pk,codigo,idVendedor)
  OCONTACT(lastname,Cpk,movil)*/
-router.get("/home/search", (req, res) => {
+router.get("/home/search",verytoken, (req, res) => {
     var params = req.query;
     var limit;
     var filter = {};
@@ -219,8 +292,8 @@ router.get("/home/search", (req, res) => {
         res.status(200).json(docs);
     })
 });
-//GET MOSTRAR NEIGH POR
-router.get("/neigh/search", (req, res) => {
+//GET MOSTRAR NEIGH POR 
+router.get("/neigh/search",verytoken, (req, res) => {
     var params = req.query;
     var limit;
     var filter = {};
